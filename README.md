@@ -1,14 +1,23 @@
 # Move-In Floor Planner
 
-Draw an apartment to scale, trace it from a floor plan image, and drag real-size furniture in to check what fits.
+Plan a move on a tablet or computer:
 
-Everything is in `index.html`. There's no build step. Plans are saved in the visitor's own browser (localStorage).
+- **Floor plan:** draw the apartment to scale (or trace your listing's floor plan image), then drag real-size furniture in to check what fits.
+- **Room look:** add product photos from IKEA, Walmart or any shop, place them in a room picture, and save the result as an image. Plain white backgrounds are removed automatically, and pieces with a real height or width are sized to the room.
 
-## Run locally
+Live site: https://ellielauk.github.io/move-in-floor-planner/
 
-Open `index.html` in a browser.
+Plans and images are saved in the visitor's own browser (localStorage and IndexedDB). Nothing is uploaded.
+
+## On iPad
+
+Open the site in Safari, tap Share → **Add to Home Screen**, and use it from the Home Screen icon. Safari can clear saved data for websites you haven't opened in a while; Home Screen apps keep theirs.
+
+## Editing
+
+- `src/app.html` is the source. It's also published as a Claude artifact, so it has no `<html>`/`<head>` wrapper.
+- Run `python3 build.py` to regenerate `index.html`, the page GitHub Pages serves.
 
 ## Deploy
 
-- **GitHub Pages:** Settings → Pages → Deploy from branch → `main` / root.
-- **Vercel:** import this repo as a project (no framework, no build command), or run `npx vercel` in this folder.
+GitHub Pages serves `main` from the repo root. Push to `main` and it redeploys within a minute or two.
