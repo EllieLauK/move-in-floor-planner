@@ -51,6 +51,10 @@ button,input,select,textarea{font:inherit;color:inherit}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--sheet)}
 .seg button{border:0;background:none;padding:4px 12px;border-radius:999px;cursor:pointer;font-size:13px;color:var(--ink-2)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.sides{display:grid;gap:6px}
+.side-row{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:13px}
+.seg.sm button{padding:4px 10px;font-size:12px}
+@media (pointer:coarse){.seg.sm button{padding:7px 12px}}
 .btn{border:1px solid var(--line);background:var(--sheet);padding:6px 12px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:500;white-space:nowrap}
 .btn:hover{border-color:var(--ink-2)}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
@@ -389,11 +393,11 @@ const LIB = [
 let uid = 0; const nid = () => (Date.now().toString(36) + (uid++).toString(36));
 
 function sample(){
-  const R = (name,x,y,w,h) => ({id:nid(),name,x,y,w,h});
+  const R = (name,x,y,w,h,sides) => ({id:nid(),name,x,y,w,h,...(sides ? {sides} : {})});
   const I = (name,w,d,kind,cat,x,y,rot=0) => ({id:nid(),name,w,d,kind,cat,x,y,rot});
   return {
     unit:'imperial', snap:true, example:true,
-    rooms:[R('Living & dining',0,0,520,400),R('Kitchen',520,0,220,260),R('Entry',520,260,220,140),R('Bedroom',0,400,360,330),R('Bathroom',360,400,200,220),R('Storage',560,400,180,150)],
+    rooms:[R('Living & dining',0,0,520,400),R('Kitchen',520,0,220,260),R('Entry',520,260,220,140,{w:'dotted'}),R('Bedroom',0,400,360,330),R('Bathroom',360,400,200,220),R('Storage',560,400,180,150)],
     items:[
       I('Rug',152,244,'rug','misc',200,265,90),
       I('3-seat sofa',213,90,'sofa','seat',200,355,180),
@@ -573,7 +577,15 @@ function render(){
     const s = sel && sel.type === 'room' && sel.id === rm.id;
     o += `<rect data-room="${rm.id}" class="floor${s?' sel':''}" x="${rm.x}" y="${rm.y}" width="${rm.w}" height="${rm.h}"${fo}/>`;
   }
-  for (const rm of S.rooms) o += `<rect class="wall" x="${rm.x}" y="${rm.y}" width="${rm.w}" height="${rm.h}" stroke-width="${3*px}" stroke-linejoin="miter"/>`;
+  {
+    let solid = '', dotted = '';
+    for (const sg of wallSegments()){
+      const d = sg.o === 'h' ? `M${sg.a} ${sg.c}H${sg.b}` : `M${sg.c} ${sg.a}V${sg.b}`;
+      if (sg.t === 'wall') solid += d; else if (sg.t === 'dotted') dotted += d;
+    }
+    if (dotted) o += `<path class="wall wall-dotted" d="${dotted}" stroke-width="${3.5*px}" stroke-linecap="round" stroke-dasharray="0 ${8*px}"/>`;
+    if (solid) o += `<path class="wall" d="${solid}" stroke-width="${3*px}" stroke-linecap="square"/>`;
+  }
   for (const rm of S.rooms){
     const cx = rm.x + rm.w/2, cy = rm.y + rm.h/2, wpx = rm.w/px, hpx = rm.h/px;
     if (wpx < 40 || hpx < 24) continue;
@@ -679,7 +691,8 @@ function roomOverlay(rm, px){
   o += `<text class="dimtext" x="${rm.x+rm.w/2}" y="${y - 6*px}" text-anchor="middle" font-size="${fs}">${fmtLen(rm.w)}</text>`;
   o += `<path class="dimline" d="M${x} ${rm.y}V${rm.y+rm.h}M${x-tk} ${rm.y}H${x+tk}M${x-tk} ${rm.y+rm.h}H${x+tk}" stroke-width="${1.2*px}"/>`;
   o += `<text class="dimtext" x="${x - 6*px}" y="${rm.y+rm.h/2}" text-anchor="middle" font-size="${fs}" transform="rotate(-90 ${x - 6*px} ${rm.y+rm.h/2})">${fmtLen(rm.h)}</text>`;
-  o += `<rect class="selbox" x="${rm.x}" y="${rm.y}" width="${rm.w}" height="${rm.h}" stroke-width="${2*px}"/>`;
+  const ins = 5*px;
+  o += `<rect class="selbox" x="${rm.x+ins}" y="${rm.y+ins}" width="${Math.max(0, rm.w-2*ins)}" height="${Math.max(0, rm.h-2*ins)}" stroke-width="${1.5*px}" stroke-dasharray="${6*px} ${4*px}"/>`;
   const hs = 10*px*HS, H = {nw:[rm.x,rm.y], n:[rm.x+rm.w/2,rm.y], ne:[rm.x+rm.w,rm.y], e:[rm.x+rm.w,rm.y+rm.h/2], se:[rm.x+rm.w,rm.y+rm.h], s:[rm.x+rm.w/2,rm.y+rm.h], sw:[rm.x,rm.y+rm.h], w:[rm.x,rm.y+rm.h/2]};
   const cur = {nw:'nwse',se:'nwse',ne:'nesw',sw:'nesw',n:'ns',s:'ns',e:'ew',w:'ew'};
   for (const [k,[hx,hy]] of Object.entries(H)) o += `<rect class="handle" data-handle="${k}" x="${hx-hs/2}" y="${hy-hs/2}" width="${hs}" height="${hs}" stroke-width="${1.5*px}" style="cursor:${cur[k]}-resize"/>`;
@@ -693,6 +706,43 @@ function measureSVG(a, b, px, label){
   o += `<rect class="measure-pill" x="${mx - tw/2}" y="${my - th - 8*px}" width="${tw}" height="${th}" rx="${10*px}"/>`;
   o += `<text class="measure-text" x="${mx}" y="${my - th/2 - 8*px}" text-anchor="middle" dominant-baseline="central" font-size="${fs}">${esc(label)}</text>`;
   return o;
+}
+
+function clearNeighbourSide(rm, side){
+  const opp = {n:'s', s:'n', e:'w', w:'e'}[side], near = (a, b) => Math.abs(a - b) < 1;
+  const line = {n:rm.y, s:rm.y + rm.h, w:rm.x, e:rm.x + rm.w}[side], horiz = side === 'n' || side === 's';
+  for (const o of S.rooms){
+    if (o === rm || !o.sides || !o.sides[opp] || o.sides[opp] === 'wall') continue;
+    const oLine = {n:o.y, s:o.y + o.h, w:o.x, e:o.x + o.w}[opp];
+    const overlap = horiz ? Math.min(rm.x + rm.w, o.x + o.w) - Math.max(rm.x, o.x) : Math.min(rm.y + rm.h, o.y + o.h) - Math.max(rm.y, o.y);
+    if (near(line, oLine) && overlap > 1) o.sides[opp] = 'wall';
+  }
+}
+// Each room side is 'wall', 'dotted' (open: counter, archway) or 'none'.
+// Sides that lie on the same line are merged; where they overlap, the more open style wins,
+// so marking one room's side dotted also opens the shared stretch of its neighbour's wall.
+const SIDE_TYPES = ['wall', 'dotted', 'none'];
+function wallSegments(){
+  const R = v => Math.round(v * 2) / 2, groups = new Map();
+  const add = (o, c, a, b, t) => { const k = o + R(c); if (!groups.has(k)) groups.set(k, []); groups.get(k).push({o, c:R(c), a, b, t:SIDE_TYPES.includes(t) ? t : 'wall'}); };
+  for (const r of S.rooms){
+    const sd = r.sides || {};
+    add('h', r.y, r.x, r.x + r.w, sd.n); add('h', r.y + r.h, r.x, r.x + r.w, sd.s);
+    add('v', r.x, r.y, r.y + r.h, sd.w); add('v', r.x + r.w, r.y, r.y + r.h, sd.e);
+  }
+  const out = [];
+  for (const g of groups.values()){
+    const pts = [...new Set(g.flatMap(s => [s.a, s.b]))].sort((a, b) => a - b);
+    let cur = null;
+    for (let i = 0; i < pts.length - 1; i++){
+      const a = pts[i], b = pts[i+1], m = (a + b) / 2;
+      let best = -1; for (const s of g) if (s.a <= m && s.b >= m) best = Math.max(best, SIDE_TYPES.indexOf(s.t));
+      if (best < 0){ cur = null; continue; }
+      const t = SIDE_TYPES[best];
+      if (cur && cur.t === t && cur.b === a) cur.b = b; else { cur = {o:g[0].o, c:g[0].c, a, b, t}; out.push(cur); }
+    }
+  }
+  return out;
 }
 
 function renderScale(px){
@@ -772,10 +822,20 @@ function renderInspector(){
       </div>
       <p class="muted">${lenHint()} Drag the square handles to resize; edges snap to neighbouring rooms.</p>
       <div class="stat" style="margin:6px 0 12px">${fmtArea(rm.w*rm.h)}<small>${fmtArea2(rm.w*rm.h)}</small></div>
+      <div class="field"><label>Walls</label>
+        <div class="sides">${[['n','Top'],['e','Right'],['s','Bottom'],['w','Left']].map(([k, l]) => `<div class="side-row"><span>${l}</span><div class="seg sm" role="group" aria-label="${l} wall">${SIDE_TYPES.map(t => `<button data-side="${k}" data-t="${t}" aria-pressed="${((rm.sides || {})[k] || 'wall') === t}">${{wall:'Wall', dotted:'Dotted', none:'None'}[t]}</button>`).join('')}</div></div>`).join('')}</div>
+        <p class="muted" style="margin-top:6px">Use Dotted for open edges that aren't real walls, like a kitchen counter, an archway or an open-plan divide. Where two rooms share an edge, marking it in either room is enough.</p>
+      </div>
       <div class="actions"><button class="btn danger" id="r-del">Remove room</button><button class="btn" id="r-done" style="margin-left:auto">Done</button></div>`;
     $('#r-name').oninput = e => { rm.name = e.target.value; save(); render(); };
     const setLen = key => e => { const v = parseLen(e.target.value); if (v == null || v < 30){ toast('Could not read that size. ' + lenHint()); e.target.value = fmtInput(rm[key]); return; } snapshot(); rm[key] = v; commit(); };
     $('#r-w').onchange = setLen('w'); $('#r-h').onchange = setLen('h');
+    insp.querySelectorAll('[data-side]').forEach(b => b.onclick = () => {
+      snapshot(); rm.sides = {...(rm.sides || {}), [b.dataset.side]: b.dataset.t};
+      // keep the shared edge consistent: setting a side back to Wall also closes the neighbour's matching side
+      if (b.dataset.t === 'wall') clearNeighbourSide(rm, b.dataset.side);
+      commit();
+    });
     $('#r-del').onclick = deleteSel;
     $('#r-done').onclick = () => { sel = null; renderAll(); };
     return;
@@ -1096,7 +1156,8 @@ $('#io-load').onclick = () => {
     const d = JSON.parse($('#io-in').value);
     if (!Array.isArray(d.rooms) || !Array.isArray(d.items)) throw 0;
     snapshot();
-    S.rooms = d.rooms.filter(r => isFinite(r.x) && isFinite(r.w)).map(r => ({id:r.id || nid(), name:String(r.name || 'Room'), x:+r.x, y:+r.y, w:+r.w, h:+r.h}));
+    S.rooms = d.rooms.filter(r => isFinite(r.x) && isFinite(r.w)).map(r => ({id:r.id || nid(), name:String(r.name || 'Room'), x:+r.x, y:+r.y, w:+r.w, h:+r.h,
+      ...(r.sides && typeof r.sides === 'object' ? {sides:Object.fromEntries(['n','e','s','w'].filter(k => SIDE_TYPES.includes(r.sides[k])).map(k => [k, r.sides[k]]))} : {})}));
     S.items = d.items.filter(i => isFinite(i.x) && isFinite(i.w)).map(i => ({id:i.id || nid(), name:String(i.name || 'Piece'), w:+i.w, d:+(i.d || i.w), kind:i.kind || 'box', cat:i.cat || 'misc', x:+i.x, y:+i.y, rot:+i.rot || 0}));
     if (d.unit === 'metric' || d.unit === 'imperial') S.unit = d.unit;
     S.example = false; sel = null; $('#io').hidden = true;
