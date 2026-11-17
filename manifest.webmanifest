@@ -1,0 +1,13 @@
+{
+  "name": "Move-In Floor Planner",
+  "short_name": "Floor Planner",
+  "description": "Draw your apartment to scale, place real-size furniture, and preview how pieces will look.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f7f9f8",
+  "theme_color": "#1b2629",
+  "icons": [
+    { "src": "apple-touch-icon.png", "sizes": "180x180", "type": "image/png", "purpose": "any" }
+  ]
+}

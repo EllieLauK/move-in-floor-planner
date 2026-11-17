@@ -8,6 +8,9 @@ Run: python3 build.py
 import pathlib
 
 root = pathlib.Path(__file__).parent
+# Offline support: only the hosted site registers the service worker (sw.js).
+SW = ("<script>if ('serviceWorker' in navigator) addEventListener('load', () => "
+      "navigator.serviceWorker.register('sw.js').catch(() => {}));</script>\n")
 src = (root / "src" / "app.html").read_text()
 i = src.index("</style>") + len("</style>")
 head, body = src[:i], src[i:]
@@ -21,10 +24,11 @@ out = (
     '<meta name="apple-mobile-web-app-title" content="Floor Planner">\n'
     '<meta name="theme-color" content="#1b2629">\n'
     '<link rel="apple-touch-icon" href="apple-touch-icon.png">\n'
+    '<link rel="manifest" href="manifest.webmanifest">\n'
     '<meta name="description" content="Draw your apartment to scale, drag real-size furniture in, and preview how pieces will look in the room.">\n'
     "<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}"
     "*,*::before,*::after{box-sizing:border-box}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>\n"
-    + head + "\n</head>\n<body>" + body.rstrip() + "\n</body>\n</html>\n"
+    + head + "\n</head>\n<body>" + body.rstrip() + "\n" + SW + "</body>\n</html>\n"
 )
 (root / "index.html").write_text(out)
 print("Wrote index.html")

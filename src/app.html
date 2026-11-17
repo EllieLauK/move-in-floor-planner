@@ -8,7 +8,7 @@
 :root{
   --paper:#e9eeec; --sheet:#f7f9f8; --panel:#fbfcfc; --ink:#1b2629; --ink-2:#5a6a6e; --line:#d3dbd9;
   --grid:#e2e8e6; --grid-major:#cad4d2; --room:#ffffff; --wall:#1b2629;
-  --accent:#2c56c9; --accent-ink:#ffffff; --accent-soft:#e1e8fb; --warn:#c2410c; --warn-soft:#fde8dc; --ok:#2f7a55;
+  --accent:#2c56c9; --accent-ink:#ffffff; --accent-soft:#e1e8fb; --warn:#c2410c; --warn-soft:#fde8dc; --ok:#2f7a55; --pen-red:#d1432f; --pen-green:#2f8a57; --pen-yellow:#f2c94c;
   --f-bed:#ddd2f2; --f-seat:#cfe6d9; --f-table:#f0dfc4; --f-store:#d3e3f0; --f-kit:#e3e3da; --f-misc:#f3d8dd; --f-stroke:#3a4a4e;
   --font-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
   --font-body:"Instrument Sans", "Helvetica Neue", system-ui, sans-serif;
@@ -18,13 +18,13 @@
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --paper:#0f1517; --sheet:#141b1e; --panel:#172024; --ink:#e2eae9; --ink-2:#98a8aa; --line:#2a363a;
   --grid:#1b2427; --grid-major:#263236; --room:#1a2427; --wall:#d4dfde;
-  --accent:#86a2f6; --accent-ink:#0f1517; --accent-soft:#232e4b; --warn:#fb8f4e; --warn-soft:#3a2316; --ok:#6cc596;
+  --accent:#86a2f6; --accent-ink:#0f1517; --accent-soft:#232e4b; --warn:#fb8f4e; --warn-soft:#3a2316; --ok:#6cc596; --pen-red:#ff7a66; --pen-green:#6cc596; --pen-yellow:#e8c547;
   --f-bed:#463c62; --f-seat:#2c4d40; --f-table:#57462c; --f-store:#2c475c; --f-kit:#3f413b; --f-misc:#59343e; --f-stroke:#c3cfce;
   color-scheme:dark }}
 :root[data-theme="dark"]{
   --paper:#0f1517; --sheet:#141b1e; --panel:#172024; --ink:#e2eae9; --ink-2:#98a8aa; --line:#2a363a;
   --grid:#1b2427; --grid-major:#263236; --room:#1a2427; --wall:#d4dfde;
-  --accent:#86a2f6; --accent-ink:#0f1517; --accent-soft:#232e4b; --warn:#fb8f4e; --warn-soft:#3a2316; --ok:#6cc596;
+  --accent:#86a2f6; --accent-ink:#0f1517; --accent-soft:#232e4b; --warn:#fb8f4e; --warn-soft:#3a2316; --ok:#6cc596; --pen-red:#ff7a66; --pen-green:#6cc596; --pen-yellow:#e8c547;
   --f-bed:#463c62; --f-seat:#2c4d40; --f-table:#57462c; --f-store:#2c475c; --f-kit:#3f413b; --f-misc:#59343e; --f-stroke:#c3cfce;
   color-scheme:dark }
 
@@ -64,6 +64,21 @@ button,input,select,textarea{font:inherit;color:inherit}
 #plan.panning{cursor:grabbing}
 #plan.tool-measure,#plan.tool-calibrate{cursor:crosshair}
 #plan.tool-image{cursor:move}
+#plan.tool-draw{cursor:crosshair}
+.ink{fill:none;stroke-linecap:round;stroke-linejoin:round;pointer-events:none}
+.ink.marker{opacity:.38}
+.ik-ink{stroke:var(--ink)}.ik-red{stroke:var(--pen-red)}.ik-blue{stroke:var(--accent)}.ik-green{stroke:var(--pen-green)}.ik-yellow{stroke:var(--pen-yellow)}
+.note{cursor:grab}
+.note-bg{fill:var(--panel);fill-opacity:.94;stroke:var(--line)}
+.note-bg.sel{stroke:var(--accent)}
+.note-text{font-family:var(--font-body);font-weight:500;pointer-events:none}
+.note-text.empty{opacity:.45}
+.nt-ink{fill:var(--ink)}.nt-red{fill:var(--pen-red)}.nt-blue{fill:var(--accent)}.nt-green{fill:var(--pen-green)}.nt-yellow{fill:var(--ink)}
+.pen-dots{display:inline-flex;gap:4px;align-items:center;padding:0 4px}
+.tools .pen-dots button{width:24px;height:24px;border-radius:50%;padding:0;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line)}
+.tools .pen-dots button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent);background-clip:padding-box}
+@media (pointer:coarse){.tools .pen-dots button{width:30px;height:30px}}
+textarea.note-input{font-family:var(--font-body);font-size:15px}
 .tools{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none}
 .tools .grp{display:flex;gap:2px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;pointer-events:auto;box-shadow:0 1px 2px rgb(0 0 0 / .06)}
 .tools button{border:0;background:none;padding:5px 10px;border-radius:7px;cursor:pointer;font-size:13px;color:var(--ink)}
@@ -213,7 +228,12 @@ details.custom summary{cursor:pointer;font-size:13px;font-weight:600}
       <div class="grp" role="group" aria-label="Tools">
         <button id="t-select" aria-pressed="true" title="Select and move (Esc)">Move</button>
         <button id="t-measure" aria-pressed="false" title="Drag to measure a distance (M)">Measure</button>
+        <button id="t-draw" aria-pressed="false" title="Write and sketch with Apple Pencil (P)">✎ Draw</button>
         <button id="t-room" title="Add a room">+ Room</button>
+      </div>
+      <div class="grp" role="group" aria-label="Pen" id="drawBar" hidden>
+        <button data-dm="pen">Pen</button><button data-dm="marker">Marker</button><button data-dm="erase">Eraser</button><button data-dm="text">Text</button>
+        <span class="pen-dots" id="penDots"></span>
       </div>
       <div class="grp" role="group" aria-label="View">
         <button id="z-out" title="Zoom out">−</button>
@@ -412,6 +432,14 @@ let measure = null;        // {a,b}
 let cal = null;            // {a,b,done}
 let undoStack = [];
 const pointers = new Map();
+// handwriting
+const SVGNS = 'http://www.w3.org/2000/svg';
+const PEN_KEYS = ['ink', 'red', 'blue', 'green', 'yellow'];
+const penVar = c => c === 'ink' ? 'var(--ink)' : c === 'blue' ? 'var(--accent)' : `var(--pen-${c})`;
+const NOTE_SIZES = [['S', 12], ['M', 18], ['L', 28]];   // text height in cm, so notes scale with the plan
+let drawMode = 'pen', inkColor = 'ink', seenPen = false, live = null;
+S.ink = Array.isArray(S.ink) ? S.ink : [];
+S.notes = Array.isArray(S.notes) ? S.notes : [];
 let bgImg = null;          // Image element for natural size
 
 const TOUCH = matchMedia('(pointer: coarse)').matches;
@@ -469,10 +497,10 @@ function save(){
     }
   }, 250);
 }
-function snapshot(){ undoStack.push(JSON.stringify({rooms:S.rooms, items:S.items, bg: S.bg ? {...S.bg, src:undefined} : null})); if (undoStack.length > 80) undoStack.shift(); }
+function snapshot(){ undoStack.push(JSON.stringify({rooms:S.rooms, items:S.items, ink:S.ink, notes:S.notes, bg: S.bg ? {...S.bg, src:undefined} : null})); if (undoStack.length > 120) undoStack.shift(); }
 function undo(){
   const t = undoStack.pop(); if (!t){ toast('Nothing to undo'); return; }
-  const d = JSON.parse(t); S.rooms = d.rooms; S.items = d.items;
+  const d = JSON.parse(t); S.rooms = d.rooms; S.items = d.items; S.ink = d.ink || []; S.notes = d.notes || [];
   if (d.bg && S.bg) Object.assign(S.bg, {x:d.bg.x, y:d.bg.y, scale:d.bg.scale, opacity:d.bg.opacity});
   if (sel && !findSel()) sel = null;
   save(); renderAll();
@@ -589,6 +617,14 @@ function render(){
   const ordered = [...S.items].sort((a,b) => (a.kind==='rug'?0:1) - (b.kind==='rug'?0:1));
   for (const it of ordered) o += itemSVG(it, px);
 
+  // handwriting and notes (markers under pen strokes; the stroke being drawn is a separate live path)
+  if (!S.inkHidden){
+    const drawing = drag && drag.type === 'ink' ? drag.st : null;
+    for (const st of S.ink) if (st.m === 'marker' && st !== drawing) o += inkSVG(st);
+    for (const st of S.ink) if (st.m !== 'marker' && st !== drawing) o += inkSVG(st);
+    for (const n of S.notes) o += noteSVG(n, px);
+  }
+
   // selection overlays
   const cur = findSel();
   if (cur && sel.type === 'room') o += roomOverlay(cur, px);
@@ -604,6 +640,7 @@ function render(){
     o += `<text class="empty-text" x="${c.x}" y="${c.y + 14*px}" text-anchor="middle" font-size="${13*px}">Add a room with “+ Room”, or upload your floor plan image on the left.</text>`;
   }
   world.innerHTML = o;
+  if (live && drag && drag.type === 'ink') world.appendChild(live);
   renderScale(px);
 }
 
@@ -742,7 +779,7 @@ function renderScale(px){
 
 function findSel(){
   if (!sel) return null;
-  return (sel.type === 'room' ? S.rooms : S.items).find(x => x.id === sel.id) || null;
+  return (sel.type === 'room' ? S.rooms : sel.type === 'note' ? S.notes : S.items).find(x => x.id === sel.id) || null;
 }
 
 /* ---------- inspector ---------- */
@@ -763,6 +800,41 @@ function renderInspector(){
   if (tool === 'calibrate'){
     insp.innerHTML = `<h2>Set the scale</h2><p>Drag a line on the image along a wall whose length is printed on your plan. Longer walls give a more accurate scale.</p><button class="btn" id="cal-cancel">Cancel</button>`;
     $('#cal-cancel').onclick = () => { cal = null; setTool('select'); };
+    return;
+  }
+  if (cur && sel.type === 'note'){
+    const n = cur;
+    insp.innerHTML = `<h2>Note</h2>
+      <div class="field"><label for="n-text">Text</label><textarea id="n-text" class="note-input" rows="4" placeholder="Type, or write here with Apple Pencil and it turns into text.">${esc(n.text)}</textarea></div>
+      <div class="field"><label>Colour</label><div class="swatches">${PEN_KEYS.filter(c => c !== 'yellow').map(c => `<button data-nc="${c}" aria-label="${c}" aria-pressed="${n.c === c}" style="background:${penVar(c)}"></button>`).join('')}</div></div>
+      <div class="field"><label>Size</label><div class="seg sm" role="group" aria-label="Note size">${NOTE_SIZES.map(([l, v]) => `<button data-fs="${v}" aria-pressed="${Math.abs(n.fs - v) < 0.5}">${l}</button>`).join('')}</div></div>
+      <p class="muted">Drag the note on the plan to move it.</p>
+      <div class="actions"><button class="btn danger" id="n-del">Delete note</button><button class="btn" id="n-done" style="margin-left:auto">Done</button></div>`;
+    let typed = false;
+    $('#n-text').oninput = e => { if (!typed){ snapshot(); typed = true; } n.text = e.target.value; save(); render(); };
+    insp.querySelectorAll('[data-nc]').forEach(b => b.onclick = () => { snapshot(); n.c = b.dataset.nc; commit(); });
+    insp.querySelectorAll('[data-fs]').forEach(b => b.onclick = () => { snapshot(); n.fs = +b.dataset.fs; commit(); });
+    $('#n-del').onclick = deleteSel;
+    $('#n-done').onclick = () => { if (!n.text.trim()){ S.notes = S.notes.filter(x => x !== n); save(); } sel = null; renderAll(); };
+    return;
+  }
+  if (tool === 'draw'){
+    const any = S.ink.length || S.notes.length;
+    insp.innerHTML = `<h2>Notes &amp; sketching</h2>
+      <p>${TOUCH ? 'Write on the plan with Apple Pencil. Your fingers still move and zoom the plan, and your palm is ignored while you write.' : 'Drag on the plan to write or sketch.'}</p>
+      <p class="muted"><strong>Pen</strong> and <strong>Marker</strong> draw. <strong>Eraser</strong> removes whole strokes you touch. <strong>Text</strong>: tap the plan to add a typed note. Everything stays pinned to the plan as you zoom, and Undo works for each stroke.</p>
+      <p class="muted">You can also handwrite straight into any size box, such as a room's Width, and iPad turns it into text (Scribble, in Settings → Apple Pencil).</p>
+      <div class="actions" style="margin:4px 0 8px"><button class="btn" id="ink-hide">${S.inkHidden ? 'Show notes' : 'Hide notes'}</button>
+        <span id="inkClearWrap"><button class="btn danger" id="ink-clear"${any ? '' : ' disabled'}>Clear all notes</button></span>
+        <button class="btn" id="ink-done" style="margin-left:auto">Done</button></div>
+      <p class="muted">${S.ink.length} stroke${S.ink.length === 1 ? '' : 's'} · ${S.notes.length} text note${S.notes.length === 1 ? '' : 's'}</p>`;
+    $('#ink-hide').onclick = () => { S.inkHidden = !S.inkHidden; commit(); };
+    $('#ink-done').onclick = () => setTool('select');
+    $('#ink-clear').onclick = () => {
+      $('#inkClearWrap').innerHTML = '<span class="muted">Remove all handwriting and notes?</span> <button class="btn danger" id="ink-yes">Yes, clear</button> <button class="btn" id="ink-no">Keep</button>';
+      $('#ink-yes').onclick = () => { snapshot(); S.ink = []; S.notes = []; commit(); toast('Notes cleared. Undo brings them back.'); };
+      $('#ink-no').onclick = () => renderInspector();
+    };
     return;
   }
   if (cur && sel.type === 'item'){
@@ -839,11 +911,13 @@ function renderInspector(){
     <div class="stat">${S.rooms.length ? fmtArea(total) : '—'}<small>${S.rooms.length ? fmtArea2(total) + ' total' : 'no rooms yet'}</small></div>
     <ul class="rooms-list">${S.rooms.map(r => `<li><button data-pick="${r.id}"><span>${esc(r.name)}</span><span class="num">${fmtLen(r.w)} × ${fmtLen(r.h)} · ${fmtArea(r.w*r.h)}</span></button></li>`).join('')}</ul>
     <p class="muted" style="margin-top:10px">${S.items.length} piece${S.items.length===1?'':'s'} of furniture placed. ${nW ? `<span class="pill">⚠ ${nW} with clashes</span>` : S.items.length ? `<span class="pill ok">Everything fits</span>` : ''}</p>
-    <p class="muted">Area counts the inside of each room as drawn, so it will read a little under the gross figure on a listing.</p>`;
+    <p class="muted">Area counts the inside of each room as drawn, so it will read a little under the gross figure on a listing.</p>
+    ${S.ink.length || S.notes.length ? `<p class="muted" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">Handwritten notes: ${S.ink.length} stroke${S.ink.length === 1 ? '' : 's'}, ${S.notes.length} text note${S.notes.length === 1 ? '' : 's'} <button class="btn sm" id="ink-toggle">${S.inkHidden ? 'Show' : 'Hide'}</button></p>` : ''}`;
   insp.innerHTML = h;
   insp.querySelectorAll('[data-pick]').forEach(b => b.onclick = () => { sel = {type:'room', id:b.dataset.pick}; renderAll(); });
+  if ($('#ink-toggle')) $('#ink-toggle').onclick = () => { S.inkHidden = !S.inkHidden; commit(); };
   if (S.example){
-    $('#ex-blank').onclick = () => { snapshot(); S.rooms = []; S.items = []; S.example = false; sel = null; commit(); fit(); };
+    $('#ex-blank').onclick = () => { snapshot(); S.rooms = []; S.items = []; S.ink = []; S.notes = []; S.example = false; sel = null; commit(); fit(); };
     $('#ex-keep').onclick = () => { S.example = false; save(); renderInspector(); };
   }
 }
@@ -874,6 +948,13 @@ function renderBgControls(){
 function renderTools(){
   $('#t-select').setAttribute('aria-pressed', tool === 'select' || tool === 'image' || tool === 'calibrate');
   $('#t-measure').setAttribute('aria-pressed', tool === 'measure');
+  $('#t-draw').setAttribute('aria-pressed', tool === 'draw');
+  $('#drawBar').hidden = tool !== 'draw';
+  document.querySelectorAll('[data-dm]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dm === drawMode));
+  $('#penDots').innerHTML = PEN_KEYS.map(c => `<button data-pc="${c}" aria-label="${c} pen" aria-pressed="${c === inkColor}" style="background:${penVar(c)}"></button>`).join('');
+  $('#penDots').querySelectorAll('[data-pc]').forEach(b => b.onclick = () => { inkColor = b.dataset.pc; if (drawMode === 'erase') drawMode = 'pen'; renderTools(); });
+  $('#hint').textContent = tool === 'draw' ? (TOUCH ? 'Write with Apple Pencil · fingers move and zoom' : 'Drag to write or sketch on the plan')
+    : TOUCH ? 'Drag to move · tap a piece for options · pinch to zoom' : 'Drag to move · R rotates · Del removes · pinch or ⌘/Ctrl + scroll to zoom';
   $('#t-snap').setAttribute('aria-pressed', !!S.snap);
 }
 function renderAll(){ warns = computeWarnings(); render(); renderInspector(); renderBgControls(); renderTools(); renderUnits(); }
@@ -903,7 +984,9 @@ function addRoom(){
 }
 function deleteSel(){
   if (!sel) return; snapshot();
-  if (sel.type === 'room') S.rooms = S.rooms.filter(r => r.id !== sel.id); else S.items = S.items.filter(i => i.id !== sel.id);
+  if (sel.type === 'room') S.rooms = S.rooms.filter(r => r.id !== sel.id);
+  else if (sel.type === 'note') S.notes = S.notes.filter(n => n.id !== sel.id);
+  else S.items = S.items.filter(i => i.id !== sel.id);
   sel = null; commit();
 }
 function duplicateSel(){
@@ -919,7 +1002,83 @@ function nudge(dx, dy){
 }
 function setTool(t){
   tool = t; if (t !== 'measure') measure = null; if (t !== 'calibrate') cal = null;
+  if (t === 'draw' && sel && sel.type !== 'note') sel = null;
+  if (t === 'draw' && S.inkHidden) S.inkHidden = false;
   renderAll();
+}
+
+/* ---------- handwriting ---------- */
+function polyD(P){
+  if (!P.length) return '';
+  let d = `M${P[0][0]} ${P[0][1]}`;
+  if (P.length === 1) return d + `L${P[0][0] + 0.01} ${P[0][1]}`;
+  for (let i = 1; i < P.length; i++) d += `L${P[i][0]} ${P[i][1]}`;
+  return d;
+}
+// Pen strokes get thicker with Apple Pencil pressure: consecutive points with the same
+// (quantized) width share one path; round caps hide the joins.
+function inkSVG(st){
+  const P = st.pts, cls = `ink ik-${st.c}${st.m === 'marker' ? ' marker' : ''}`;
+  if (!P.length) return '';
+  if (st.m === 'marker' || P.length < 3) return `<path class="${cls}" d="${polyD(P)}" stroke-width="${st.w}"/>`;
+  const q = p => Math.round((0.45 + 0.9 * clamp(p, 0, 1)) * 4) / 4;
+  let o = '', cur = null, d = '';
+  for (let i = 1; i < P.length; i++){
+    const f = q((P[i-1][2] + P[i][2]) / 2);
+    if (f !== cur){ if (d) o += `<path class="${cls}" d="${d}" stroke-width="${st.w * cur}"/>`; cur = f; d = `M${P[i-1][0]} ${P[i-1][1]}`; }
+    d += `L${P[i][0]} ${P[i][1]}`;
+  }
+  if (d) o += `<path class="${cls}" d="${d}" stroke-width="${st.w * cur}"/>`;
+  return o;
+}
+function noteSVG(n, px){
+  const fs = n.fs, empty = !String(n.text || '').trim(), shown = empty ? ['Note'] : String(n.text).split('\n');
+  const w = Math.max(3, ...shown.map(l => l.length)) * fs * 0.56 + fs * 0.9, h = shown.length * fs * 1.3 + fs * 0.5;
+  const s = sel && sel.type === 'note' && sel.id === n.id;
+  return `<g class="note" data-note="${n.id}" transform="translate(${n.x} ${n.y})"><rect class="note-bg${s ? ' sel' : ''}" width="${w}" height="${h}" rx="${fs * 0.35}" stroke-width="${(s ? 2 : 1) * px}"/>`
+    + `<text class="note-text nt-${n.c}${empty ? ' empty' : ''}" font-size="${fs}">${shown.map((l, i) => `<tspan x="${fs * 0.45}" y="${fs * (1.08 + i * 1.3)}">${esc(l) || ' '}</tspan>`).join('')}</text></g>`;
+}
+function addPt(st, e, p){
+  const P = st.pts, last = P[P.length - 1];
+  if (last && Math.hypot(p.x - last[0], p.y - last[1]) < 0.6 * ppx()) return;
+  const pr = e.pointerType === 'pen' ? (e.pressure || 0.5) : 0.5;
+  P.push([Math.round(p.x * 10) / 10, Math.round(p.y * 10) / 10, Math.round(pr * 100) / 100]);
+}
+function startDraw(e, p, t){
+  const px = ppx();
+  if (drawMode === 'text'){
+    const noteEl = t.closest('[data-note]');
+    if (noteEl){ const n = S.notes.find(x => x.id === noteEl.dataset.note); sel = {type:'note', id:n.id}; drag = {type:'note', start:p, orig:{x:n.x, y:n.y}}; renderAll(); return; }
+    snapshot();
+    const n = {id:nid(), x:Math.round(p.x), y:Math.round(p.y), text:'', c:inkColor === 'yellow' ? 'ink' : inkColor, fs:18};
+    S.notes.push(n); sel = {type:'note', id:n.id}; commit();
+    setTimeout(() => { const ta = $('#n-text'); if (ta) ta.focus(); }, 60);
+    return;
+  }
+  if (drawMode === 'erase'){ drag = {type:'erase', pid:e.pointerId}; eraseAt(p); return; }
+  snapshot();
+  const marker = drawMode === 'marker';
+  const st = {id:nid(), c:marker && inkColor === 'ink' ? 'yellow' : inkColor, m:marker ? 'marker' : 'pen', w:Math.round((marker ? 14 : 2.4) * px * 100) / 100, pts:[]};
+  addPt(st, e, p); S.ink.push(st);
+  drag = {type:'ink', st, pid:e.pointerId, ptype:e.pointerType};
+  render();
+  live = document.createElementNS(SVGNS, 'path');
+  live.setAttribute('class', `ink ik-${st.c}${marker ? ' marker' : ''}`);
+  live.setAttribute('stroke-width', st.w * (marker ? 1 : 0.9));
+  live.setAttribute('d', polyD(st.pts));
+  world.appendChild(live);
+}
+function distSeg(p, a, b){
+  const dx = b[0] - a[0], dy = b[1] - a[1], L = dx*dx + dy*dy;
+  const t = L ? clamp(((p.x - a[0]) * dx + (p.y - a[1]) * dy) / L, 0, 1) : 0;
+  return Math.hypot(p.x - (a[0] + t*dx), p.y - (a[1] + t*dy));
+}
+function eraseAt(p){
+  const tol = 12 * ppx() * (TOUCH ? 1.4 : 1);
+  const hit = S.ink.filter(st => { const P = st.pts, r = tol + st.w / 2; if (P.length === 1) return Math.hypot(p.x - P[0][0], p.y - P[0][1]) < r; for (let i = 1; i < P.length; i++) if (distSeg(p, P[i-1], P[i]) < r) return true; return false; });
+  if (!hit.length) return;
+  if (!drag.erased){ snapshot(); drag.erased = true; }
+  S.ink = S.ink.filter(st => !hit.includes(st)); render();
 }
 function applyCal(){
   const v = parseLen($('#cal-len').value);
@@ -952,19 +1111,38 @@ function pinchState(){ const [a,b] = [...pointers.values()]; return {cx:(a.x+b.x
 
 svg.addEventListener('pointerdown', e => {
   if (e.button !== 0 && e.pointerType === 'mouse') return;
+  if (tool === 'draw'){
+    if (e.pointerType === 'pen'){
+      // Apple Pencil: from now on fingers only move/zoom; a palm resting on the screen is dropped
+      seenPen = true;
+      if (drag && drag.type !== 'ink' && drag.type !== 'erase'){ drag = null; svg.classList.remove('panning'); }
+      pointers.clear();
+    } else if (drag && (drag.type === 'ink' || drag.type === 'erase')){
+      if (drag.ptype === 'pen' || e.pointerType !== 'touch') return;   // palm while writing
+      // a second finger while finger-drawing: undo that stroke and pinch instead
+      if (drag.type === 'ink'){ S.ink = S.ink.filter(s => s !== drag.st); undoStack.pop(); if (live){ live.remove(); live = null; } }
+      drag = null;
+    }
+  }
   pointers.set(e.pointerId, {x:e.clientX, y:e.clientY});
   try { svg.setPointerCapture(e.pointerId); } catch(_){}
-  if (pointers.size === 2){ const p = pinchState(); drag = {type:'pinch', start:p, view:{...view}, world:toWorld(p.cx, p.cy)}; return; }
+  if (pointers.size === 2){ const p = pinchState(); drag = {type:'pinch', start:p, view:{...view}, world:toWorld(p.cx, p.cy)}; render(); return; }
   if (pointers.size > 2) return;
   const p = toWorld(e.clientX, e.clientY), t = e.target;
-  const hRot = t.closest('[data-rot]'), hRes = t.closest('[data-handle]'), itEl = t.closest('[data-item]'), rmEl = t.closest('[data-room]');
+  const hRot = t.closest('[data-rot]'), hRes = t.closest('[data-handle]'), itEl = t.closest('[data-item]'), rmEl = t.closest('[data-room]'), ntEl = t.closest('[data-note]');
 
+  if (tool === 'draw'){
+    if (e.pointerType !== 'touch' || !seenPen) startDraw(e, p, t);
+    else { drag = {type:'pan', cx:e.clientX, cy:e.clientY, view:{...view}}; svg.classList.add('panning'); }
+    return;
+  }
   if (tool === 'measure'){ measure = {a:p, b:p}; drag = {type:'measure'}; render(); return; }
   if (tool === 'calibrate'){ cal = {a:p, b:p, done:false}; drag = {type:'cal'}; render(); return; }
   if (tool === 'image'){ drag = {type:'bg', start:p, orig:{x:S.bg.x, y:S.bg.y}}; return; }
 
   if (hRot){ drag = {type:'rotate', id:hRot.dataset.rot}; }
   else if (hRes && sel && sel.type === 'room'){ const rm = findSel(); drag = {type:'resize', h:hRes.dataset.handle, start:p, orig:{...rm}}; }
+  else if (ntEl){ const n = S.notes.find(x => x.id === ntEl.dataset.note); sel = {type:'note', id:n.id}; drag = {type:'note', start:p, orig:{x:n.x, y:n.y}}; }
   else if (itEl){ const it = S.items.find(i => i.id === itEl.dataset.item); sel = {type:'item', id:it.id}; drag = {type:'item', start:p, orig:{x:it.x, y:it.y}}; }
   else if (rmEl){ const rm = S.rooms.find(r => r.id === rmEl.dataset.room); sel = {type:'room', id:rm.id}; drag = {type:'room', start:p, orig:{x:rm.x, y:rm.y}}; }
   else { sel = null; drag = {type:'pan', cx:e.clientX, cy:e.clientY, view:{...view}}; svg.classList.add('panning'); }
@@ -987,6 +1165,19 @@ svg.addEventListener('pointermove', e => {
   const first = () => { if (!drag.moved){ drag.moved = true; snapshot(); S.example = false; } };
   switch (drag.type){
     case 'pan': { const k = ppx(); view.x = drag.view.x - (e.clientX - drag.cx)*k; view.y = drag.view.y - (e.clientY - drag.cy)*k; render(); break; }
+    case 'ink': {
+      if (e.pointerId !== drag.pid) break;
+      const evs = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+      for (const ce of (evs.length ? evs : [e])) addPt(drag.st, ce, toWorld(ce.clientX, ce.clientY));
+      if (live) live.setAttribute('d', polyD(drag.st.pts));
+      break;
+    }
+    case 'erase': if (e.pointerId === drag.pid) eraseAt(p); break;
+    case 'note': {
+      const n = findSel(); if (!n) break;
+      if (!drag.moved && Math.hypot(p.x-drag.start.x, p.y-drag.start.y) < 3*ppx()) break;
+      first(); n.x = drag.orig.x + p.x - drag.start.x; n.y = drag.orig.y + p.y - drag.start.y; render(); break;
+    }
     case 'measure': measure.b = p; render(); break;
     case 'cal': cal.b = p; render(); break;
     case 'bg': first(); S.bg.x = drag.orig.x + p.x - drag.start.x; S.bg.y = drag.orig.y + p.y - drag.start.y; render(); break;
@@ -1037,6 +1228,13 @@ svg.addEventListener('pointermove', e => {
 function endPointer(e){
   pointers.delete(e.pointerId);
   if (!drag) return;
+  if (drag.type === 'ink' || drag.type === 'erase'){
+    if (e.pointerId !== drag.pid) return;
+    const d = drag; drag = null;
+    if (live){ live.remove(); live = null; }
+    if (d.type === 'ink' || d.erased) save();
+    renderAll(); return;
+  }
   if (drag.type === 'pinch'){ if (pointers.size < 2) drag = null; return; }
   svg.classList.remove('panning');
   const d = drag; drag = null;
@@ -1073,6 +1271,8 @@ document.addEventListener('keydown', e => {
     case 'r': case 'R': rotateSel(e.shiftKey ? -90 : 90); break;
     case 'd': case 'D': duplicateSel(); break;
     case 'm': case 'M': setTool(tool === 'measure' ? 'select' : 'measure'); break;
+    case 'p': case 'P': setTool(tool === 'draw' ? 'select' : 'draw'); break;
+    case 'e': case 'E': if (tool === 'draw'){ drawMode = drawMode === 'erase' ? 'pen' : 'erase'; renderTools(); } break;
     case 'f': case 'F': fit(); break;
     case 'Escape': sel = null; setTool('select'); break;
     case 'ArrowLeft': if (sel){ e.preventDefault(); nudge(-step, 0); } break;
@@ -1085,6 +1285,8 @@ document.addEventListener('keydown', e => {
 /* ---------- controls ---------- */
 $('#t-select').onclick = () => setTool('select');
 $('#t-measure').onclick = () => setTool(tool === 'measure' ? 'select' : 'measure');
+$('#t-draw').onclick = () => setTool(tool === 'draw' ? 'select' : 'draw');
+document.querySelectorAll('[data-dm]').forEach(b => b.onclick = () => { drawMode = b.dataset.dm; if (tool !== 'draw') setTool('draw'); else renderTools(); });
 $('#t-room').onclick = addRoom;
 $('#t-snap').onclick = () => { S.snap = !S.snap; save(); renderTools(); toast(S.snap ? 'Snapping on' : 'Snapping off'); };
 $('#t-undo').onclick = undo;
@@ -1128,7 +1330,7 @@ $('#bg-del').onclick = () => { S.bg = null; if (tool === 'image' || tool === 'ca
 $('#bg-op').oninput = e => { if (S.bg){ S.bg.opacity = +e.target.value; save(); render(); } };
 
 // save / load
-function planText(){ return JSON.stringify({unit:S.unit, rooms:S.rooms.map(r => ({...r, x:+r.x.toFixed(1), y:+r.y.toFixed(1), w:+r.w.toFixed(1), h:+r.h.toFixed(1)})), items:S.items.map(i => ({...i, x:+i.x.toFixed(1), y:+i.y.toFixed(1)}))}); }
+function planText(){ return JSON.stringify({unit:S.unit, rooms:S.rooms.map(r => ({...r, x:+r.x.toFixed(1), y:+r.y.toFixed(1), w:+r.w.toFixed(1), h:+r.h.toFixed(1)})), items:S.items.map(i => ({...i, x:+i.x.toFixed(1), y:+i.y.toFixed(1)})), ink:S.ink, notes:S.notes}); }
 $('#openIO').onclick = () => { $('#io-out').value = planText(); $('#io-in').value = ''; resetClear(); $('#io').hidden = false; };
 $('#io-close').onclick = () => $('#io').hidden = true;
 $('#io').onclick = e => { if (e.target.id === 'io') $('#io').hidden = true; };
@@ -1146,6 +1348,9 @@ $('#io-load').onclick = () => {
     S.rooms = d.rooms.filter(r => isFinite(r.x) && isFinite(r.w)).map(r => ({id:r.id || nid(), name:String(r.name || 'Room'), x:+r.x, y:+r.y, w:+r.w, h:+r.h,
       ...(r.sides && typeof r.sides === 'object' ? {sides:Object.fromEntries(['n','e','s','w'].filter(k => SIDE_TYPES.includes(r.sides[k])).map(k => [k, r.sides[k]]))} : {})}));
     S.items = d.items.filter(i => isFinite(i.x) && isFinite(i.w)).map(i => ({id:i.id || nid(), name:String(i.name || 'Piece'), w:+i.w, d:+(i.d || i.w), kind:i.kind || 'box', cat:i.cat || 'misc', x:+i.x, y:+i.y, rot:+i.rot || 0}));
+    S.ink = Array.isArray(d.ink) ? d.ink.filter(st => st && Array.isArray(st.pts)).map(st => ({id:st.id || nid(), c:PEN_KEYS.includes(st.c) ? st.c : 'ink', m:st.m === 'marker' ? 'marker' : 'pen', w:+st.w || 2,
+      pts:st.pts.filter(q => Array.isArray(q) && isFinite(q[0]) && isFinite(q[1])).map(q => [+q[0], +q[1], isFinite(q[2]) ? +q[2] : 0.5])})) : [];
+    S.notes = Array.isArray(d.notes) ? d.notes.filter(n => n && isFinite(n.x) && isFinite(n.y)).map(n => ({id:n.id || nid(), x:+n.x, y:+n.y, text:String(n.text || ''), c:PEN_KEYS.includes(n.c) ? n.c : 'ink', fs:+n.fs || 18})) : [];
     if (d.unit === 'metric' || d.unit === 'imperial') S.unit = d.unit;
     S.example = false; sel = null; $('#io').hidden = true;
     save(); renderLibrary(); renderAll(); fit(); toast('Plan loaded');
@@ -1153,8 +1358,8 @@ $('#io-load').onclick = () => {
 };
 function resetClear(){ $('#clearWrap').innerHTML = '<button class="btn danger" id="io-clear">Clear everything</button>'; $('#io-clear').onclick = askClear; }
 function askClear(){
-  $('#clearWrap').innerHTML = '<span class="muted">Remove all rooms, furniture and the image?</span> <button class="btn danger" id="io-yes">Yes, clear</button> <button class="btn" id="io-no">Keep</button>';
-  $('#io-yes').onclick = () => { snapshot(); S.rooms = []; S.items = []; S.bg = null; S.example = false; sel = null; $('#io').hidden = true; save(); renderAll(); fit(); toast('Cleared. Undo brings the rooms and furniture back.'); };
+  $('#clearWrap').innerHTML = '<span class="muted">Remove all rooms, furniture, notes and the image?</span> <button class="btn danger" id="io-yes">Yes, clear</button> <button class="btn" id="io-no">Keep</button>';
+  $('#io-yes').onclick = () => { snapshot(); S.rooms = []; S.items = []; S.ink = []; S.notes = []; S.bg = null; S.example = false; sel = null; $('#io').hidden = true; save(); renderAll(); fit(); toast('Cleared. Undo brings the rooms and furniture back.'); };
   $('#io-no').onclick = resetClear;
 }
 $('#io-clear').onclick = askClear;

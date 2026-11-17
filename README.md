@@ -9,9 +9,15 @@ Live site: https://ellielauk.github.io/move-in-floor-planner/
 
 Plans and images are saved in the visitor's own browser (localStorage and IndexedDB). Nothing is uploaded.
 
+- **Notes:** with ✎ Draw, write and sketch on the plan with Apple Pencil (pressure-sensitive, palm ignored, fingers still pan and zoom), or add typed notes that work with Scribble.
+
 ## On iPad
 
 Open the site in Safari, tap Share → **Add to Home Screen**, and use it from the Home Screen icon. Safari can clear saved data for websites you haven't opened in a while; Home Screen apps keep theirs.
+
+## Offline
+
+`sw.js` (a service worker) caches the app after the first visit, so it opens and works with no connection. Pages load from the network first when online, so updates still arrive. Fonts fall back to system fonts if they were never cached.
 
 ## Editing
 
